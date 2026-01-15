@@ -1,0 +1,28 @@
+{
+  "name": "media-diet",
+  "version": "1.0.0",
+  "main": "dist/api.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/api.js",
+    "sync": "node dist/run.js",
+    "dev": "ts-node src/api.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Media Diet sync service and API",
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "fast-xml-parser": "^5.3.3",
+    "undici": "^7.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.0.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
