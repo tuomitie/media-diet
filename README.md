@@ -24,6 +24,7 @@ Media Diet is a small Node + TypeScript microservice that syncs Letterboxd and G
 npm install
 npm run build
 ```
+
 Set `GOODREADS_RSS_URL` to your Goodreads shelf RSS URL.
 
 ## Run the API
