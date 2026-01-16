@@ -6,6 +6,7 @@ type LetterboxdItem = {
   link?: string;
   pubDate?: string;
   description?: string;
+  "letterboxd:filmYear"?: string;
   "letterboxd:memberRating"?: string;
   "letterboxd:rewatch"?: string;
   "media:thumbnail"?: unknown;
@@ -40,6 +41,18 @@ function parseRating(value: string | undefined): number | undefined {
     return undefined;
   }
   const parsed = Number.parseFloat(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+function parseYear(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const match = value.match(/\b(18|19|20)\d{2}\b/u);
+  if (!match) {
+    return undefined;
+  }
+  const parsed = Number.parseInt(match[0], 10);
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
@@ -96,7 +109,9 @@ function pickImageUrl(item: LetterboxdItem): string | undefined {
 
 function normalizeTitle(title: string): string {
   const trimmed = title.trim();
-  return trimmed.replace(/\s*-\s*[★½]+$/u, "").trim();
+  const withoutRating = trimmed.replace(/\s*-\s*[★½]+$/u, "").trim();
+  const withoutParenYear = withoutRating.replace(/\s*\((18|19|20)\d{2}\)\s*$/u, "");
+  return withoutParenYear.replace(/,\s*(18|19|20)\d{2}\s*$/u, "").trim();
 }
 
 export async function fetchLetterboxdMovies(
@@ -129,6 +144,7 @@ export async function fetchLetterboxdMovies(
         title: normalizeTitle(item.title),
         url: normalizeMovieUrl(item.link),
         imageUrl: pickImageUrl(item),
+        year: parseYear(item["letterboxd:filmYear"]),
         rating: parseRating(item["letterboxd:memberRating"]),
         dateConsumed: item.pubDate ? new Date(item.pubDate).toISOString() : undefined,
         rewatch: parseRewatch(item["letterboxd:rewatch"])
