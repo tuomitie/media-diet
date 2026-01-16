@@ -2,6 +2,7 @@ export interface MediaBase {
   id: string;
   title: string;
   url: string;
+  imageUrl?: string;
   rating?: number;
   dateConsumed?: string;
 }

@@ -10,9 +10,13 @@ type GoodreadsRssItem = {
   link?: string;
   pubDate?: string;
   book_id?: string;
+  book_image_url?: string;
+  book_large_image_url?: string;
+  book_small_image_url?: string;
   author_name?: string;
   user_rating?: string;
   user_read_at?: string;
+  description?: string;
 };
 
 function parseRssRating(value: string | undefined): number | undefined {
@@ -36,6 +40,30 @@ function bookUrlFromId(bookId: string | undefined, fallback?: string): string {
     return fallback ?? "";
   }
   return `https://www.goodreads.com/book/show/${bookId}`;
+}
+
+function extractImageFromHtml(html?: string): string | undefined {
+  if (!html) {
+    return undefined;
+  }
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1];
+}
+
+function pickImageUrl(item: GoodreadsRssItem): string | undefined {
+  const candidates = [
+    item.book_large_image_url,
+    item.book_image_url,
+    item.book_small_image_url,
+    extractImageFromHtml(item.description)
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeText(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return undefined;
 }
 
 export async function fetchGoodreadsRssBooks(
@@ -76,6 +104,7 @@ export async function fetchGoodreadsRssBooks(
         title,
         url: bookUrlFromId(item.book_id, item.link),
         author: normalizeText(item.author_name) || undefined,
+        imageUrl: pickImageUrl(item),
         rating: parseRssRating(item.user_rating),
         dateConsumed: readAt
       };

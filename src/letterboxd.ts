@@ -5,8 +5,10 @@ type LetterboxdItem = {
   title?: string;
   link?: string;
   pubDate?: string;
+  description?: string;
   "letterboxd:memberRating"?: string;
   "letterboxd:rewatch"?: string;
+  "media:thumbnail"?: unknown;
 };
 
 function extractIdFromUrl(url: string): string {
@@ -54,6 +56,44 @@ function parseRewatch(value: string | undefined): boolean | undefined {
   return undefined;
 }
 
+function extractImageFromHtml(html?: string): string | undefined {
+  if (!html) {
+    return undefined;
+  }
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1];
+}
+
+function extractMediaUrl(media: unknown): string | undefined {
+  if (!media) {
+    return undefined;
+  }
+  if (typeof media === "string") {
+    return media;
+  }
+  if (Array.isArray(media)) {
+    for (const entry of media) {
+      const url = extractMediaUrl(entry);
+      if (url) {
+        return url;
+      }
+    }
+    return undefined;
+  }
+  if (typeof media === "object") {
+    const record = media as Record<string, unknown>;
+    const direct = record["@_url"] ?? record.url;
+    if (typeof direct === "string") {
+      return direct;
+    }
+  }
+  return undefined;
+}
+
+function pickImageUrl(item: LetterboxdItem): string | undefined {
+  return extractMediaUrl(item["media:thumbnail"]) ?? extractImageFromHtml(item.description);
+}
+
 function normalizeTitle(title: string): string {
   const trimmed = title.trim();
   return trimmed.replace(/\s*-\s*[★½]+$/u, "").trim();
@@ -88,6 +128,7 @@ export async function fetchLetterboxdMovies(
         type: "movie",
         title: normalizeTitle(item.title),
         url: normalizeMovieUrl(item.link),
+        imageUrl: pickImageUrl(item),
         rating: parseRating(item["letterboxd:memberRating"]),
         dateConsumed: item.pubDate ? new Date(item.pubDate).toISOString() : undefined,
         rewatch: parseRewatch(item["letterboxd:rewatch"])
