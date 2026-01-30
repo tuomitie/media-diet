@@ -60,10 +60,11 @@ function parseRewatch(value: string | undefined): boolean | undefined {
   if (!value) {
     return undefined;
   }
-  if (value === "true" || value === "1" || value === "yes") {
+  const lower = value.toLowerCase();
+  if (lower === "true" || lower === "1" || lower === "yes") {
     return true;
   }
-  if (value === "false" || value === "0" || value === "no") {
+  if (lower === "false" || lower === "0" || lower === "no") {
     return false;
   }
   return undefined;
