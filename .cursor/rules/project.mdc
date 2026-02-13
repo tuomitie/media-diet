@@ -1,0 +1,39 @@
+---
+description: Media Diet project architecture and conventions
+alwaysApply: true
+---
+
+# Media Diet
+
+A Node + TypeScript microservice that syncs Letterboxd and Goodreads activity into JSON files and serves them via a read-only HTTP API.
+
+## Architecture
+
+- **Backend only** — this repo has no frontend. The frontend is an Astro site in a separate repo (`optical-obelisk`) deployed on Cloudflare Pages.
+- **Data flow**: Letterboxd RSS / Goodreads RSS → sync script → JSON files in `data/` → Express API → frontend fetches JSON.
+- **Hosting**: The API runs in Docker on a home server, exposed via a Cloudflare Tunnel behind Cloudflare Access.
+- **Auth**: The frontend authenticates to the API using Cloudflare Access service tokens (`CF-Access-Client-Id` / `CF-Access-Client-Secret` headers). The service token credentials live in the frontend project, not here.
+
+## Key Commands
+
+- `npm run sync` — fetch latest data from Letterboxd/Goodreads and merge into `data/` JSON files
+- `npm start` — run the Express API (serves `data/` as JSON)
+- `npm run build` — compile TypeScript
+
+## Data Files
+
+- `data/movies.json` — sorted by `dateConsumed` descending (newest first)
+- `data/books.json` — sorted by `dateConsumed` descending
+- `data/media.json` — combined payload with `generatedAt` timestamp
+
+The sync is non-destructive: `mergeById` preserves existing entries and adds new ones. Files are always re-sorted on save. Deploy hook is only triggered when content actually changes.
+
+## CORS
+
+The API allows CORS from any `localhost`/`127.0.0.1` origin automatically. Additional origins can be added via the `CORS_ORIGINS` env variable (comma-separated).
+
+## Conventions
+
+- No line comments in code
+- Never change `.env` variables without being specifically prompted
+- Letterboxd feed values (like `letterboxd:rewatch`) use capitalized strings ("Yes"/"No") — always compare case-insensitively

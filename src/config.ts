@@ -11,5 +11,6 @@ export const config = {
   goodreadsRssUrl: process.env.GOODREADS_RSS_URL ?? "",
   dataDir: process.env.DATA_DIR ?? "./data",
   cfPagesDeployHookUrl: process.env.CF_PAGES_DEPLOY_HOOK_URL ?? "",
-  port: parseNumber(process.env.PORT, 8787)
+  port: parseNumber(process.env.PORT, 8787),
+  corsOrigins: (process.env.CORS_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean)
 };

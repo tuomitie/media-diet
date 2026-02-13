@@ -4,7 +4,7 @@ import { hasChanged } from "./diff";
 import { triggerDeployIfNeeded } from "./deploy";
 import { fetchGoodreadsRssBooks } from "./goodreads";
 import { fetchLetterboxdMovies } from "./letterboxd";
-import { buildMediaPayload } from "./normalize";
+import { buildMediaPayload, sortByDateDesc } from "./normalize";
 import { loadBooks, loadMovies, saveBooks, saveMedia, saveMovies } from "./store";
 
 function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
@@ -27,17 +27,15 @@ async function run(): Promise<void> {
     fetchLetterboxdMovies(config.letterboxdUsername),
     fetchGoodreadsRssBooks(config.goodreadsRssUrl)
   ]);
-  const newMovies = mergeById(oldMovies, fetchedMovies);
-  const newBooks = mergeById(oldBooks, fetchedBooks);
+  const newMovies = sortByDateDesc(mergeById(oldMovies, fetchedMovies));
+  const newBooks = sortByDateDesc(mergeById(oldBooks, fetchedBooks));
 
   const moviesChanged = hasChanged(oldMovies, newMovies);
   const booksChanged = hasChanged(oldBooks, newBooks);
   const changed = moviesChanged || booksChanged;
 
-  if (changed) {
-    await Promise.all([saveMovies(newMovies), saveBooks(newBooks)]);
-    await saveMedia(buildMediaPayload(newMovies, newBooks));
-  }
+  await Promise.all([saveMovies(newMovies), saveBooks(newBooks)]);
+  await saveMedia(buildMediaPayload(newMovies, newBooks));
 
   await triggerDeployIfNeeded(changed);
 }
